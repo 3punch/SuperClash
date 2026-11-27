@@ -336,7 +336,7 @@ export function BattleScreen({
       </header>
 
       {/* Arena */}
-      <div className="battle__banner" role="status">
+      <h1 className="battle__banner">
         <span className="battle__bannerround">ROUND {state.round}</span>
         <span className="battle__bannerdot" aria-hidden>
           ◆
@@ -352,7 +352,7 @@ export function BattleScreen({
                   ? 'Choose your hero in secret'
                   : `Player ${activeSide === 'p1' ? '1' : '2'} — choose in secret`}
         </span>
-      </div>
+      </h1>
 
       <section className="battle__field" aria-label="Battle arena">
         <div className="battle__side battle__side--p1">

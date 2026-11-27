@@ -59,10 +59,13 @@ export function HeroArt({
   }
 
   return (
+    // Decorative: the card itself exposes a full aria-label, so the
+    // artwork must not be announced twice.
     <img
       className={className}
       src={card.artwork}
       alt=""
+      aria-hidden
       loading={eager ? 'eager' : 'lazy'}
       decoding="async"
       draggable={false}
