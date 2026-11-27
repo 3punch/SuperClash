@@ -171,7 +171,8 @@ export function BattleScreen({
   useEffect(() => {
     if (state.phase !== 'reveal' || !state.lastResult) return;
     const outcome = state.lastResult;
-    setStage('clash');
+    // Every path that commits a round already set the 'clash' stage, so this
+    // effect only needs to drive the reveal timeline.
     sfx.reveal();
     let delay = reduced ? 60 : 760;
 

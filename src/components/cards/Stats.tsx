@@ -1,5 +1,4 @@
 import { Swords, Shield, Zap } from 'lucide-react';
-import { sfx } from '../../audio/sound';
 import type { HeroCard } from '../../game/types';
 
 const ICONS = { attack: Swords, defense: Shield, speed: Zap } as const;
@@ -71,5 +70,3 @@ export function StatPips({ value, max = 5 }: { value: number; max?: number }) {
     </span>
   );
 }
-
-export { sfx };

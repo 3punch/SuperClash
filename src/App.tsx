@@ -342,7 +342,6 @@ export default function App() {
     rematch,
     toMenu,
     updateSettings,
-    decks,
   ]);
 
   return (

@@ -17,7 +17,7 @@ npm run dev        # http://localhost:5173
 npm run build      # production bundle in dist/
 npm run preview    # serve the production bundle on :4173
 npm test           # 102 unit tests
-npm run lint       # oxlint
+npm run lint       # oxlint — 0 warnings, 0 errors
 ```
 
 Requires Node 20+ (verified on Node 22).
@@ -187,6 +187,7 @@ Coverage highlights:
 | Horizontal overflow at 360, 390, 820, 1440 px | None |
 | Production build served and played | Pass |
 | Accessibility: alt/aria on controls, single h1, lang | Pass |
+| Static analysis: `tsc -b` + `oxlint` | 0 errors, 0 warnings |
 
 ---
 

@@ -76,7 +76,7 @@ export function MainMenu({
           </div>
         </div>
 
-        <nav className="menu__nav">
+        <nav className="menu__nav" aria-label="Main">
           <Button
             size="lg"
             slash
@@ -86,15 +86,17 @@ export function MainMenu({
           >
             Play now
           </Button>
-          <Button size="md" variant="secondary" icon={<Layers size={18} />} onClick={onCollection}>
-            Collection
-          </Button>
-          <Button size="md" variant="secondary" icon={<BookOpen size={18} />} onClick={onHowTo}>
-            How to play
-          </Button>
-          <Button size="md" variant="ghost" icon={<SettingsIcon size={18} />} onClick={onSettings}>
-            Settings
-          </Button>
+          <div className="menu__navrow">
+            <Button size="md" variant="secondary" icon={<Layers size={18} />} onClick={onCollection}>
+              Collection
+            </Button>
+            <Button size="md" variant="secondary" icon={<BookOpen size={18} />} onClick={onHowTo}>
+              How to play
+            </Button>
+            <Button size="md" variant="ghost" icon={<SettingsIcon size={18} />} onClick={onSettings}>
+              Settings
+            </Button>
+          </div>
         </nav>
 
         <dl className="menu__stats" aria-label="Career statistics">
