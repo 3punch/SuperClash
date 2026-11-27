@@ -136,8 +136,14 @@ export function BattleScreen({
         return;
       }
 
-      push(beginHandoff(picked));
-      setStage('handoff');
+      if (activeSide === 'p1') {
+        // P1's pick is confirmed: seal the device before P2 may look.
+        push(beginHandoff(picked));
+        setStage('handoff');
+      } else {
+        // P2's pick stays on the board until they explicitly lock in.
+        push(picked);
+      }
     },
     [activeSide, after, push, reduced, stage, state],
   );
@@ -251,11 +257,21 @@ export function BattleScreen({
   const shownP1Card = revealed && result ? requireHero(result.p1.cardId) : null;
   const shownP2Card = revealed && result ? requireHero(result.p2.cardId) : null;
   const ownPending = state.mode === 'ai' ? view.ownPick : state.pending[turnSide];
-  const ownPendingCard = ownPending ? requireHero(ownPending) : null;
+
+  /**
+   * P1's committed-but-unrevealed card.
+   * In solo play the human may see their own locked choice. In a local duel
+   * the board is shared, so once the handoff starts nothing of P1's card may
+   * render — only its sealed state is public.
+   */
+  const p1PendingId = state.mode === 'ai' ? view.ownPick : state.pending.p1;
+  const p1Committed = p1PendingId ? requireHero(p1PendingId) : null;
+  const p1MaySeeOwnCard = state.mode === 'ai';
   const foeSide: Side = turnSide === 'p1' ? 'p2' : 'p1';
   const opponentPending = state.mode === 'ai' ? null : state.pending[foeSide];
   const opponentReady = state.mode === 'ai' ? false : opponentPending !== null;
-  const cardsLeft = (side: Side) => state.fighters[side].hand.length + state.fighters[side].drawPile.length;
+  /** Cards still in the draw pile (the hand is already on screen). */
+  const cardsToDraw = (side: Side) => state.fighters[side].drawPile.length;
   const matchOver = state.phase === 'match-end';
 
   const actionLabel = (): string => {
@@ -320,15 +336,45 @@ export function BattleScreen({
       </header>
 
       {/* Arena */}
+      <div className="battle__banner" role="status">
+        <span className="battle__bannerround">ROUND {state.round}</span>
+        <span className="battle__bannerdot" aria-hidden>
+          ◆
+        </span>
+        <span className="battle__bannerphase">
+          {stage === 'handoff'
+            ? 'Passing the device'
+            : stage === 'clash'
+              ? 'Clash resolving'
+              : stage === 'resolve'
+                ? 'Round complete'
+                : state.mode === 'ai'
+                  ? 'Choose your hero in secret'
+                  : `Player ${activeSide === 'p1' ? '1' : '2'} — choose in secret`}
+        </span>
+      </div>
+
       <section className="battle__field" aria-label="Battle arena">
         <div className="battle__side battle__side--p1">
           <HealthBar hp={p1.hp} name={p1.name} label="P1" side="p1" burn={p1.burn} active={turnSide === 'p1'} />
           <div className="battle__slots">
-            <div className={`slotcard ${shownP1Card ? 'is-revealed' : ''} ${ownPendingCard && !revealed ? 'is-locked' : ''}`}>
+            <div
+              className={`slotcard ${shownP1Card ? 'is-revealed' : ''} ${
+                p1Committed && !revealed ? 'is-locked' : ''
+              }`}
+              data-committed={p1Committed ? p1Committed.id : undefined}
+            >
               {shownP1Card ? (
                 <HeroCardView card={shownP1Card} size="md" showAbility={false} />
-              ) : ownPendingCard ? (
-                <HeroCardView card={ownPendingCard} size="md" showAbility={false} badge="LOCKED IN" />
+              ) : p1Committed && p1MaySeeOwnCard ? (
+                <HeroCardView card={p1Committed} size="md" showAbility={false} badge="LOCKED IN" />
+              ) : p1Committed ? (
+                // Local duel, waiting for P2: never render the card face.
+                <div className="slotcard__sealed">
+                  <Lock size={24} />
+                  <span>Sealed</span>
+                  <small>Hidden from Player 2</small>
+                </div>
               ) : (
                 <div className="slotcard__empty">
                   <ShieldQuestion size={26} />
@@ -352,14 +398,14 @@ export function BattleScreen({
               ) : null}
             </div>
           ) : (
-            <div className="battle__roundcard">
-              <span className="label">Round {state.round}</span>
-              <strong>{stage === 'handoff' ? 'Pass device' : 'Pick a hero'}</strong>
-              <p>
-                {state.mode === 'ai'
-                  ? 'Your pick stays hidden until the clash.'
-                  : `Player ${activeSide === 'p1' ? '1' : '2'} chooses in private.`}
-              </p>
+            <div className="idle">
+              <span className="idle__ring" aria-hidden />
+              <span className="idle__vs" aria-hidden>
+                VS
+              </span>
+              <span className="idle__caption">
+                {stage === 'handoff' ? 'Pass device' : 'Pick a hero'}
+              </span>
             </div>
           )}
           {fx ? (
@@ -457,7 +503,7 @@ export function BattleScreen({
                   <EnergyCost cost={0} free={false} />
                 )}
                 <span className="battle__handlabel">
-                  {hand.length} in hand · {cardsLeft(turnSide)} cards left
+                  {hand.length} in hand · {cardsToDraw(turnSide)} to draw
                 </span>
               </div>
               <div className="battle__handactions">

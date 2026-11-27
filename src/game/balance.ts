@@ -7,9 +7,15 @@ export const BALANCE = {
   handSize: 3,
   maxRounds: 5,
 
-  energyStart: 3,
-  energyMax: 9,
-  energyPerRound: 2,
+  /**
+   * Energy economy, tuned to the 5-round match length.
+   * Average card cost is ~3.2, so a fighter must average slightly above that
+   * to keep every hand interesting without ever being locked out entirely.
+   *   round 1: 5 · then +3 per round · cap 12
+   */
+  energyStart: 5,
+  energyMax: 12,
+  energyPerRound: 3,
 
   /**
    * A connecting attack always chips at least 1 HP ("glancing blow").

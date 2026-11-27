@@ -1337,11 +1337,9 @@
 
 .slotcard {
   position: relative;
-  /* Height-driven sizing keeps both sides identical and never overflows. */
-  height: clamp(160px, 38dvh, 330px);
-  aspect-ratio: 3 / 4.15;
-  width: auto;
-  max-width: 100%;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
   border-radius: var(--r-md);
   display: grid;
   place-items: center;
@@ -1377,6 +1375,37 @@
 }
 .slotcard__empty svg { opacity: 0.42; }
 .slotcard__empty--opponent { color: rgba(239, 68, 68, 0.5); }
+
+.slotcard__sealed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 10px;
+  text-align: center;
+  color: var(--gold);
+}
+.slotcard__sealed span {
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.slotcard__sealed small {
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  line-height: 1.3;
+}
+.slotcard__sealed::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 198, 61, 0.08) 0 8px, transparent 8px 16px);
+  pointer-events: none;
+}
 
 .slotcard__hidden {
   display: flex;
@@ -1425,27 +1454,82 @@
   min-height: 0;
 }
 
-.battle__roundcard {
+.battle__banner {
+  position: relative;
+  z-index: 4;
+  flex: 0 0 auto;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 9px 10px;
-  border-radius: var(--r-md);
-  background: rgba(8, 11, 22, 0.65);
-  border: 1px solid var(--line);
-  text-align: center;
-  backdrop-filter: blur(8px);
-  max-width: 100%;
-}
-.battle__roundcard strong {
-  font-family: var(--font-display);
-  font-size: clamp(0.8rem, 1.5vw, 1rem);
-  letter-spacing: 0.05em;
-  color: #fff;
+  justify-content: center;
+  gap: 8px;
+  padding: 2px 10px 4px;
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
+  color: var(--text-faint);
+  text-align: center;
 }
-.battle__roundcard p { font-size: 0.56rem; color: var(--text-faint); line-height: 1.3; }
+.battle__bannerround {
+  font-weight: 700;
+  color: var(--gold);
+}
+.battle__bannerdot { color: var(--neon-purple); font-size: 0.5rem; }
+.battle__bannerphase { color: var(--text-lo); }
+
+/* Idle emblem in the middle of the arena while both sides pick */
+.idle {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: clamp(52px, min(9vw, 12dvh), 116px);
+  aspect-ratio: 1;
+  isolation: isolate;
+  margin-bottom: 12px;
+}
+.idle__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  box-shadow: 0 0 30px -8px var(--neon-purple), inset 0 0 26px -10px var(--neon-purple);
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.16), transparent 68%);
+  animation: idle-pulse 3.4s ease-in-out infinite;
+}
+.idle__ring::before,
+.idle__ring::after {
+  content: '';
+  position: absolute;
+  inset: -14%;
+  border-radius: 50%;
+  border: 1px dashed rgba(126, 148, 199, 0.24);
+  animation: spin-slow 40s linear infinite;
+}
+.idle__ring::after { inset: -30%; border-style: solid; border-color: rgba(126, 148, 199, 0.1); animation-duration: 70s; }
+@keyframes idle-pulse { 50% { opacity: 0.55; } }
+
+.idle__vs {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2.2vw, 1.8rem);
+  letter-spacing: 0.04em;
+  color: #fff;
+  -webkit-text-stroke: 2px #0a0c18;
+  paint-order: stroke fill;
+  text-shadow: 0 0 20px var(--gold);
+}
+.idle__caption {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) skewX(-6deg);
+  font-family: var(--font-display);
+  font-size: clamp(0.56rem, 1vw, 0.72rem);
+  letter-spacing: 0.1em;
+  color: #0a0c18;
+  background: var(--gold);
+  padding: 1px 7px;
+  white-space: nowrap;
+}
 
 .clash { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .clash__flash {
@@ -1648,8 +1732,19 @@
   position: relative;
   z-index: 4;
   flex: 0 0 auto;
-  padding: 4px clamp(8px, 2.6vw, 24px) calc(8px + var(--safe-bottom));
+  padding: 4px clamp(8px, 2.6vw, 24px) calc(10px + var(--safe-bottom));
   background: linear-gradient(180deg, transparent, rgba(4, 5, 11, 0.94) 22%);
+  /* The dock owns exactly as much height as the hand needs. */
+  min-height: calc(var(--dock-h, 0px));
+}
+
+/* The hand is sized from the space actually left after the arena:
+   card height = dock's leftover height, width = 3/3.85 of that.
+   This guarantees the full card face is visible on every screen. */
+.battle__hand {
+  --card-h: clamp(112px, 25svh, 210px);
+  --card-w: calc(var(--card-h) * 0.78);
+  --dock-h: calc(var(--card-h) + 46px);
 }
 
 .battle__handhead {
@@ -1698,7 +1793,8 @@
 }
 .battle__handslot {
   position: relative;
-  width: clamp(84px, 11.6vw, 128px);
+  height: var(--card-h);
+  width: var(--card-w);
   flex: 0 0 auto;
   animation: hand-deal 440ms var(--ease-out) backwards;
   animation-delay: calc(var(--i) * 65ms);
@@ -1710,7 +1806,7 @@
 
 .battle__reason {
   position: absolute;
-  bottom: -13px;
+  bottom: -12px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 0.5rem;
@@ -1974,8 +2070,9 @@
   .slotcard { height: clamp(122px, 26dvh, 190px); }
   .hpbar { padding: 5px 7px; }
   .hpbar__label { display: none; }
-  .battle__roundcard { padding: 6px 7px; }
-  .battle__roundcard p { display: none; }
+  .battle__banner { font-size: 0.52rem; padding: 0 8px 3px; gap: 5px; letter-spacing: 0.1em; }
+  .idle { width: clamp(44px, 11vw, 58px); margin-bottom: 9px; }
+  .idle__caption { font-size: 0.5rem; top: calc(100% + 4px); }
   .clash__headline { font-size: 0.52rem; }
   .dmg { top: 26%; }
   .battle__handslot { width: clamp(78px, 25vw, 108px); }
@@ -2623,22 +2720,34 @@
   .screen-header__back span { display: none; }
 
   .battle__field {
-    grid-template-columns: minmax(0, 1fr) 50px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 62px minmax(0, 1fr);
     gap: 5px;
-    padding: 3px 7px;
+    padding: 6px 8px;
+    align-content: center;
+    align-items: center;
   }
+  .battle__field {
+    flex: 1 1 auto;
+    min-height: 0;
+    align-items: stretch;
+    align-content: stretch;
+  }
+  .battle__side { justify-content: flex-start; height: 100%; }
+  .battle__slots { flex: 1 1 auto; min-height: 0; }
+  .slotcard { flex: 0 0 auto; height: clamp(150px, 26svh, 250px); width: 100%; }
+  .slotcard.is-revealed, .slotcard.is-locked { flex: 0 1 auto; }
+  .battle__center { justify-content: center; }
   .battle__slots { max-width: 100%; }
-  .slotcard { height: clamp(116px, 24dvh, 180px); }
   .hpbar { padding: 5px 7px; }
   .hpbar__label { display: none; }
   .hpbar__name { font-size: 0.66rem; letter-spacing: 0.02em; }
-  .battle__roundcard { padding: 6px 7px; }
-  .battle__roundcard p { display: none; }
+  .battle__banner { font-size: 0.52rem; padding: 0 8px 3px; gap: 5px; letter-spacing: 0.1em; }
+  .idle { width: clamp(44px, 11vw, 58px); margin-bottom: 9px; }
+  .idle__caption { font-size: 0.5rem; top: calc(100% + 4px); }
   .clash__headline { font-size: 0.52rem; }
   .dmg { top: 24%; }
 
-  .battle__handslot { width: clamp(76px, 24vw, 104px); }
-  .battle__hand { gap: 5px; }
+  .battle__hand { --card-h: clamp(128px, 21svh, 186px); gap: 5px; }
   .battle__handlabel { display: none; }
   .battle__dock { padding-top: 2px; }
 
@@ -2665,9 +2774,8 @@
 
 @media (max-width: 430px) {
   .battle__field { grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr); }
-  .slotcard { height: clamp(104px, 22dvh, 150px); }
   .slotcard__empty span { display: none; }
-  .battle__handslot { width: clamp(70px, 25vw, 92px); }
+  .battle__hand { --card-h: clamp(118px, 19svh, 160px); }
   .settings__stats { grid-template-columns: repeat(2, 1fr); }
   .result__actions .btn { flex: 1 1 46%; }
 }
@@ -2675,8 +2783,8 @@
 /* Landscape phones: keep the whole battle on one screen */
 @media (max-height: 620px) and (orientation: landscape) {
   .battle__dock { padding-bottom: 4px; }
-  .battle__handslot { width: 76px; }
-  .slotcard { height: 140px; }
+  .battle__hand { --card-h: 104px; }
+  .slotcard { max-height: 210px; }
   .breakdown { max-height: 54dvh; }
   .hpbar { padding: 4px 7px; }
   .battle__top { padding-top: 4px; }
@@ -2691,7 +2799,7 @@ img, svg { max-width: 100%; }
    only — the real card is still one tap away via Inspect.
    ───────────────────────────────────────────────────────────────────────── */
 
-.hero-card--hand { aspect-ratio: 3 / 3.85; }
+.hero-card--hand { aspect-ratio: auto; height: 100%; }
 .hero-card--hand .hero-card__body { padding: 4px 6px 5px; gap: 3px; }
 .hero-card--hand .hero-card__meta { justify-content: space-between; }
 .hero-card--hand .hero-card__class { font-size: 0.52rem; letter-spacing: 0.1em; }
